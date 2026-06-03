@@ -136,10 +136,6 @@ class ArubaIAPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class ArubaIAPOptionsFlow(config_entries.OptionsFlow):
     """Options flow — change host/credentials/tracking/polling after setup."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialise options flow with the current config entry."""
-        self.config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.FlowResult:
