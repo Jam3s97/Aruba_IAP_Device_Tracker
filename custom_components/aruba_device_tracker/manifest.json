@@ -1,5 +1,5 @@
 {
-  "domain": "Aruba Device Tracker",
+  "domain": "aruba_device_tracker",
   "name": "Aruba Device Tracker",
   "version": "1.1.0",
   "config_flow": true,
