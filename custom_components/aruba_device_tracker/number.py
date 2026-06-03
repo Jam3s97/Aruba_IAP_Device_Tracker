@@ -28,10 +28,11 @@ LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    hass: HomeAssistant,  # noqa: ARG001
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
+    """Set up the poll interval number entity."""
     async_add_entities([ArubaPollIntervalNumber(entry)])
 
 
@@ -47,6 +48,7 @@ class ArubaPollIntervalNumber(NumberEntity):
     _attr_native_unit_of_measurement = "s"
 
     def __init__(self, entry: ConfigEntry) -> None:
+        """Initialise the poll interval entity."""
         self._entry = entry
         self._attr_unique_id = f"{entry.entry_id}_poll_interval"
         self._attr_name = "Poll Interval"
@@ -66,13 +68,12 @@ class ArubaPollIntervalNumber(NumberEntity):
         )
 
     async def async_set_native_value(self, value: float) -> None:
-        """Update the poll interval and restart the coordinator update interval."""
+        """Update the poll interval and apply it to the coordinator immediately."""
         new_options = {**self._entry.options, CONF_SCAN_INTERVAL: int(value)}
         self.hass.config_entries.async_update_entry(self._entry, options=new_options)
 
-        # Update the coordinator's interval live — no reload needed
         coordinator: ArubaIAPCoordinator = self._entry.runtime_data
         coordinator.update_interval = timedelta(seconds=int(value))
         self.async_write_ha_state()
 
-        LOGGER.debug("Aruba IAP poll interval updated to %ds", int(value))
+        LOGGER.debug("Aruba Device Tracker poll interval updated to %ds", int(value))

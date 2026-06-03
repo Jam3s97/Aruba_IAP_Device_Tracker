@@ -1,5 +1,6 @@
 """
 Aruba Device Tracker — Home Assistant Integration.
+
 https://github.com/Jam3s97/aruba_device_tracker
 """
 
@@ -44,7 +45,6 @@ async def async_setup_entry(
         LOGGER.error("Failed to connect to Aruba IAP at %s", entry.data[CONF_HOST])
         return False
 
-    # Read poll interval from options (live) or data (initial setup)
     scan_interval = entry.options.get(
         CONF_SCAN_INTERVAL,
         entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
@@ -93,6 +93,7 @@ class ArubaIAPCoordinator(DataUpdateCoordinator):
         client: ArubaIAPClient,
         scan_interval: int = DEFAULT_SCAN_INTERVAL,
     ) -> None:
+        """Initialise the coordinator with a client and polling interval."""
         super().__init__(
             hass=hass,
             logger=LOGGER,
@@ -105,11 +106,13 @@ class ArubaIAPCoordinator(DataUpdateCoordinator):
         """Fetch latest client data from the IAP."""
         try:
             result = await self.hass.async_add_executor_job(self.client.get_clients)
+        except Exception as err:
+            msg = f"Error communicating with Aruba IAP: {err}"
+            raise UpdateFailed(msg) from err
+        else:
             if result is None:
                 LOGGER.warning(
                     "Aruba IAP get_clients returned None — keeping last known data"
                 )
                 return self.data or {}
             return result
-        except Exception as err:
-            raise UpdateFailed(f"Error communicating with Aruba IAP: {err}") from err

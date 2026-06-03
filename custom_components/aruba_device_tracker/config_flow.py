@@ -8,7 +8,7 @@ from typing import Any
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
 from .aruba_client import ArubaIAPClient
 from .const import (
@@ -24,7 +24,12 @@ from .const import (
 LOGGER = logging.getLogger(__name__)
 
 
-async def _test_connection(hass, host, username, password) -> str | None:
+async def _test_connection(
+    hass: HomeAssistant,
+    host: str,
+    username: str,
+    password: str,
+) -> str | None:
     """Test connectivity and API privilege. Returns None on success or an error key."""
     client = ArubaIAPClient(host=host, username=username, password=password)
     try:
@@ -35,10 +40,11 @@ async def _test_connection(hass, host, username, password) -> str | None:
         await hass.async_add_executor_job(client.logout)
         if clients is None:
             return "api_access_denied"
-        return None
-    except Exception as err:
-        LOGGER.debug("Aruba IAP connection test exception: %s", err)
+    except Exception:  # noqa: BLE001
+        LOGGER.debug("Aruba IAP connection test exception", exc_info=True)
         return "cannot_connect"
+    else:
+        return None
 
 
 class ArubaIAPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -46,13 +52,10 @@ class ArubaIAPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    # ------------------------------------------------------------------
-    # Step 1 — Connection details
-    # ------------------------------------------------------------------
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.FlowResult:
+        """Handle the initial user step — connection details."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -79,10 +82,12 @@ class ArubaIAPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        CONF_HOST, default=(user_input or {}).get(CONF_HOST, "")
+                        CONF_HOST,
+                        default=(user_input or {}).get(CONF_HOST, ""),
                     ): str,
                     vol.Required(
-                        CONF_USERNAME, default=(user_input or {}).get(CONF_USERNAME, "")
+                        CONF_USERNAME,
+                        default=(user_input or {}).get(CONF_USERNAME, ""),
                     ): str,
                     vol.Required(CONF_PASSWORD): str,
                 }
@@ -90,13 +95,10 @@ class ArubaIAPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    # ------------------------------------------------------------------
-    # Step 2 — Tracking & polling preferences
-    # ------------------------------------------------------------------
-
     async def async_step_tracking(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.FlowResult:
+        """Handle step 2 — tracking and polling preferences."""
         if user_input is not None:
             data = {
                 **self._connection_data,
@@ -122,15 +124,12 @@ class ArubaIAPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    # ------------------------------------------------------------------
-    # Options flow
-    # ------------------------------------------------------------------
-
     @staticmethod
     @callback
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
     ) -> ArubaIAPOptionsFlow:
+        """Return the options flow handler."""
         return ArubaIAPOptionsFlow(config_entry)
 
 
@@ -138,11 +137,13 @@ class ArubaIAPOptionsFlow(config_entries.OptionsFlow):
     """Options flow — change host/credentials/tracking/polling after setup."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialise options flow with the current config entry."""
         self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.FlowResult:
+        """Manage the options form."""
         errors: dict[str, str] = {}
         current = self.config_entry.data
         current_options = self.config_entry.options

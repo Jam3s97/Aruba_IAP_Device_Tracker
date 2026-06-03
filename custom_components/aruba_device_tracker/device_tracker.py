@@ -34,7 +34,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    hass: HomeAssistant,  # noqa: ARG001
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
@@ -71,8 +71,9 @@ class ArubaClientEntity(CoordinatorEntity, ScannerEntity):
         entry: ConfigEntry,
         mac: str,
         initial_data: dict[str, Any],
-        new_device_defaults_tracked: bool,
+        new_device_defaults_tracked: bool,  # noqa: FBT001
     ) -> None:
+        """Initialise the tracker entity for a single client device."""
         super().__init__(coordinator)
         self._mac = mac
         self._entry = entry
@@ -82,23 +83,28 @@ class ArubaClientEntity(CoordinatorEntity, ScannerEntity):
 
     @property
     def source_type(self) -> SourceType:
+        """Return the source type."""
         return SourceType.ROUTER
 
     @property
     def is_connected(self) -> bool:
+        """Return True if the device is currently seen by the IAP."""
         return self._mac in self.coordinator.data
 
     @property
     def mac_address(self) -> str:
+        """Return the MAC address of the device."""
         return self._mac
 
     @property
     def hostname(self) -> str | None:
+        """Return the hostname reported by the IAP."""
         data = self.coordinator.data.get(self._mac)
         return data.get("name") if data else None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
+        """Return additional state attributes from the IAP."""
         data = self.coordinator.data.get(self._mac)
         if not data:
             return {}
@@ -114,4 +120,5 @@ class ArubaClientEntity(CoordinatorEntity, ScannerEntity):
 
     @property
     def entity_registry_enabled_default(self) -> bool:
+        """Return whether this entity is enabled when first created."""
         return self._new_device_defaults_tracked
