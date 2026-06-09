@@ -84,11 +84,7 @@ async def async_setup_entry(
             tracked.add(mac)
             client_data = (coordinator.data or {}).get(mac, {})
             # Prefer: live IAP name → registry stored name → bare MAC
-            initial_name = (
-                client_data.get("name")
-                or registry_names.get(mac)
-                or mac
-            )
+            initial_name = client_data.get("name") or registry_names.get(mac) or mac
             startup_entities.append(
                 ArubaClientEntity(
                     coordinator=coordinator,
@@ -104,11 +100,7 @@ async def async_setup_entry(
     for mac, client_data in (coordinator.data or {}).items():
         if mac not in tracked:
             tracked.add(mac)
-            initial_name = (
-                client_data.get("name")
-                or registry_names.get(mac)
-                or mac
-            )
+            initial_name = client_data.get("name") or registry_names.get(mac) or mac
             startup_entities.append(
                 ArubaClientEntity(
                     coordinator=coordinator,

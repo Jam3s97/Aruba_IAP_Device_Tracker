@@ -170,6 +170,4 @@ class ArubaCleanupSwitch(SwitchEntity):
         new_options = {**self._entry.options, CONF_CLEANUP_ENABLED: value}
         self.hass.config_entries.async_update_entry(self._entry, options=new_options)
         self.async_write_ha_state()
-        LOGGER.debug(
-            "Aruba Device Tracker: auto-remove stale devices set to %s", value
-        )
+        LOGGER.debug("Aruba Device Tracker: auto-remove stale devices set to %s", value)
